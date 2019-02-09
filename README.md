@@ -1,2 +1,2 @@
-# thermosmart_component
+# thermosmart component
 Custom hass compoment for thermosmart
