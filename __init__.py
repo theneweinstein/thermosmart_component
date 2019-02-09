@@ -18,7 +18,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.auth.util import generate_secret
 
-REQUIREMENTS = ['thermosmart_hass==0.2.0']
+REQUIREMENTS = ['thermosmart_hass==0.3.0']
 
 DEPENDENCIES = ['webhook']
 
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CACHE_PATH = 'cache_path'
 
 AUTH_CALLBACK_NAME = 'api:thermosmart'
-AUTH_CALLBACK_PATH = '/api/thermosmart'
+AUTH_CALLBACK_PATH = '/api/thermosmart/'
 
 CONFIGURATOR_DESCRIPTION = 'To link your Thermosmart account, ' \
                            'click the link, login, and authorize:'
@@ -42,6 +42,7 @@ DEFAULT_CACHE_PATH = '.thermosmart-token-cache'
 DEFAULT_NAME = 'Thermosmart'
 DEPENDENCIES = ['http']
 DOMAIN = 'thermosmart'
+AUTH_DATA = 'thermosmart_auth'
 THERMOSMART_DEVICE = 'thermosmart_device'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -53,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
 def request_configuration(hass, config, oauth):
     """Request Thermomosmart autorization"""
     configurator = hass.components.configurator
-    hass.data[DOMAIN] = configurator.request_config(
+    hass.data[AUTH_DATA] = configurator.request_config(
         DEFAULT_NAME, lambda _: None,
         link_name=CONFIGURATOR_LINK_NAME,
         link_url=oauth.get_authorize_url(),
@@ -73,35 +74,19 @@ def setup(hass, config):
         hass.http.register_view(ThermosmartAuthCallbackView(
             config, oauth))
         request_configuration(hass, config, oauth)
-        return
-    if hass.data.get(DOMAIN):
+        return True
+    if hass.data.get(AUTH_DATA):
+        _LOGGER.info("I have a token")
         configurator = hass.components.configurator
-        configurator.request_done(hass.data.get(DOMAIN))
-        del hass.data[DOMAIN]
+        configurator.request_done(hass.data.get(AUTH_DATA))
+        del hass.data[AUTH_DATA]
 
     hass.data[DOMAIN] = ThermoSmartData(token_info)
 
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     #discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
-    #webhook_id = generate_secret(entropy=32)
-    #_LOGGER.log('Webhook_id: '+ webhook_id)
-    #webhook_id = 'abdefg1234'
-    #hass.data[DOMAIN].webhook(webhook_id)
-    #hass.components.webhook.async_register(DOMAIN, 'Thermosmart', webhook_id, handle_webhook)
-
     return True
-
-async def handle_webhook(hass, webhook_id, request):
-    """Handle a thermosmart webhook message."""
-    message = await request.json()
-
-    _LOGGER.debug(message)
-    # Callback to HA registered components.
-    for subscriber in WEBHOOKS_SUBSCRIBERS:
-        subscriber.process_webhook(message)
-
-    return json_response([])
 
 class ThermosmartAuthCallbackView(HomeAssistantView):
     """Thermosmart Authorization Callback View."""
