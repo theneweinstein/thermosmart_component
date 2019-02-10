@@ -17,24 +17,24 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.auth.util import generate_secret
+from thermosmart_hass import SENSOR_LIST, BIN_SENSOR_LIST
 
 REQUIREMENTS = ['thermosmart_hass==0.3.0']
-
-DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CACHE_PATH = 'cache_path'
 
 AUTH_CALLBACK_NAME = 'api:thermosmart'
-AUTH_CALLBACK_PATH = '/api/thermosmart/'
+AUTH_CALLBACK_PATH = '/api/thermosmart'
+
+API_CLIENT_ID =  'api-rob-b130d8f5123bf24b'
+API_CLIENT_SECRET = 'c1d91661eef0bc4fa2ac67fd' 
 
 CONFIGURATOR_DESCRIPTION = 'To link your Thermosmart account, ' \
                            'click the link, login, and authorize:'
 CONFIGURATOR_LINK_NAME = 'Link Thermosmart account'
 CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
-
-WEBHOOKS_SUBSCRIBERS = []
 
 UPDATE_TIME = timedelta(seconds=30)
 
@@ -43,7 +43,6 @@ DEFAULT_NAME = 'Thermosmart'
 DEPENDENCIES = ['http']
 DOMAIN = 'thermosmart'
 AUTH_DATA = 'thermosmart_auth'
-THERMOSMART_DEVICE = 'thermosmart_device'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -67,16 +66,16 @@ def setup(hass, config):
     
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
-    oauth = oauth2.ThermosmartOAuth(callback_url, cache_path=cache)
+    oauth = oauth2.ThermosmartOAuth(API_CLIENT_ID, API_CLIENT_SECRET, callback_url, cache_path=cache)
     token_info = oauth.get_cached_token()
     if not token_info:
-        _LOGGER.info("no token; requesting authorization")
+        _LOGGER.info("No token, requesting authorization")
         hass.http.register_view(ThermosmartAuthCallbackView(
             config, oauth))
         request_configuration(hass, config, oauth)
         return True
     if hass.data.get(AUTH_DATA):
-        _LOGGER.info("I have a token")
+        _LOGGER.info("Token found")
         configurator = hass.components.configurator
         configurator.request_done(hass.data.get(AUTH_DATA))
         del hass.data[AUTH_DATA]
@@ -84,8 +83,10 @@ def setup(hass, config):
     hass.data[DOMAIN] = ThermoSmartData(token_info)
 
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
-    #discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
+    if hass.data[DOMAIN].thermosmart.opentherm():
+        discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    
     return True
 
 class ThermosmartAuthCallbackView(HomeAssistantView):
