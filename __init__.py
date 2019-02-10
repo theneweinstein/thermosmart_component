@@ -2,7 +2,7 @@
 Support for the Thermosmart thermostat.
 
 For more details about this component, please refer to the documentation at
-??
+???
 """
 import logging
 from datetime import timedelta
