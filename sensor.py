@@ -23,7 +23,7 @@ SENSOR_TYPES = thermosmart.SENSOR_LIST
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Thermosmart platform."""
-    name = config.get(CONF_NAME, None)
+    name = discovery_info['name']
 
     sensors = []
     _LOGGER.debug("Setting up platform")

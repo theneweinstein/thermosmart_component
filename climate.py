@@ -23,7 +23,7 @@ DEPENDENCIES = ['thermosmart']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Thermosmart thermostat."""
-    name = config.get(CONF_NAME, None)
+    name = discovery_info['name']
     thermostat = ThermosmartThermostat(name, hass.data[thermosmart.DOMAIN])
     add_entities([thermostat])
     thermosmart.WEBHOOKS_SUBSCRIBERS.append(thermostat) 
@@ -45,7 +45,8 @@ class ThermosmartThermostat(ClimateDevice):
             self._name = self._client.id
         self._away = False
         self._client_id = self._client.id
-        self.update_without_throttle = False
+        self.update_without_throttle = True
+        self.update()
 
     @property
     def supported_features(self):

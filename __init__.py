@@ -23,8 +23,6 @@ REQUIREMENTS = ['thermosmart_hass==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CACHE_PATH = 'cache_path'
-
 AUTH_CALLBACK_NAME = 'api:thermosmart'
 AUTH_CALLBACK_PATH = '/api/thermosmart'
 
@@ -65,7 +63,7 @@ def setup(hass, config):
     from thermosmart_hass import oauth2 as oauth2
     
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
-    cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
+    cache = hass.config.path(DEFAULT_CACHE_PATH)
     oauth = oauth2.ThermosmartOAuth(API_CLIENT_ID, API_CLIENT_SECRET, callback_url, cache_path=cache)
     token_info = oauth.get_cached_token()
     if not token_info:
@@ -82,10 +80,10 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = ThermoSmartData(token_info)
 
-    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'climate', DOMAIN, {CONF_NAME: config[DOMAIN].get(CONF_NAME,None)}, config)
 
     if hass.data[DOMAIN].thermosmart.opentherm():
-        discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+        discovery.load_platform(hass, 'sensor', DOMAIN, {CONF_NAME: config[DOMAIN].get(CONF_NAME,None)}, config)
     
     return True
 
