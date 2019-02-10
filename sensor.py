@@ -6,19 +6,12 @@ For more details about this platform, please refer to the documentation at
 
 import logging
 
-import voluptuous as vol
-
 from custom_components import thermosmart
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
 DEPENDENCIES = ['thermosmart']
 
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPES = thermosmart.SENSOR_LIST
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -28,8 +21,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     _LOGGER.debug("Setting up platform")
 
-    for _sensor in list(SENSOR_TYPES.keys()):
-        new_sensor = ThermosmartSensor(name, hass.data[thermosmart.DOMAIN], _sensor)
+    sensor_types = hass.data[thermosmart.DOMAIN].thermosmart.\
+        get_CV_sensor_list()
+    for _sensor in list(sensor_types.keys()):
+        new_sensor = ThermosmartSensor(
+            name, hass.data[thermosmart.DOMAIN], _sensor)
         sensors.append(new_sensor)
     add_entities(sensors)
 
@@ -50,7 +46,8 @@ class ThermosmartSensor(Entity):
         self._client_id = self._client.id
         self.should_fire_event = should_fire_event
         self.sensor = sensor
-        self._unit_of_measurement = SENSOR_TYPES.get(sensor, '')
+        self._unit_of_measurement = self._client.\
+            get_CV_sensor_list().get(sensor, '')
         self._state = None
         self.type = None
         self.update_without_throttle = False

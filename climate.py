@@ -5,16 +5,10 @@ For more details about this platform, please refer to the documentation at
 """
 import logging
 
-import voluptuous as vol
-
 from custom_components import thermosmart
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AWAY_MODE)
-from homeassistant.const import (CONF_NAME,
-    TEMP_CELSIUS, ATTR_TEMPERATURE)
-
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +20,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info['name']
     thermostat = ThermosmartThermostat(name, hass.data[thermosmart.DOMAIN])
     add_entities([thermostat])
-    thermosmart.WEBHOOKS_SUBSCRIBERS.append(thermostat) 
 
     return True
 
@@ -125,5 +118,3 @@ class ThermosmartThermostat(ClimateDevice):
                 self._away = True
             else:
                 self._away = False
-
-
