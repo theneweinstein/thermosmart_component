@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.auth.util import generate_secret
 from thermosmart_hass import SENSOR_LIST, BIN_SENSOR_LIST
 
-REQUIREMENTS = ['thermosmart_hass==0.3.0']
+REQUIREMENTS = ['thermosmart_hass==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
