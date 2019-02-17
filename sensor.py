@@ -1,7 +1,8 @@
 """
 Support for Thermosmart sensor (boiler information).
+
 For more details about this platform, please refer to the documentation at
-??
+https://home-assistant.io/components/thermosmart/
 """
 
 import logging
@@ -19,7 +20,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = discovery_info['name']
 
     sensors = []
-    _LOGGER.debug("Setting up platform")
+    _LOGGER.debug("Setting up platform.")
 
     sensor_types = hass.data[thermosmart.DOMAIN].thermosmart.\
         get_CV_sensor_list()
@@ -78,8 +79,9 @@ class ThermosmartSensor(Entity):
             self.update_without_throttle = False
         else:
             self._data.update()
-           
+
         if self._client.latest_update.get('ot'):
-            self._state = self._client.latest_update['ot']['readable'][self.sensor]
+            self._state = \
+                self._client.latest_update['ot']['readable'][self.sensor]
         else:
             self._state = None

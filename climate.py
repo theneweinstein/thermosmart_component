@@ -1,7 +1,8 @@
 """
-Support for Thermomsart thermostats.
+Support for Thermosmart thermostats.
+
 For more details about this platform, please refer to the documentation at
-??
+https://home-assistant.io/components/thermosmart/
 """
 import logging
 
@@ -10,9 +11,11 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
+DEPENDENCIES = ['thermosmart']
+
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['thermosmart']
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -22,6 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([thermostat])
 
     return True
+
 
 class ThermosmartThermostat(ClimateDevice):
     """Representation of a Thermosmart thermostat."""
@@ -44,8 +48,7 @@ class ThermosmartThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supported = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
-        return supported
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -112,7 +115,7 @@ class ThermosmartThermostat(ClimateDevice):
 
         if message.get('target_temperature'):
             self._target_temperature = message['target_temperature']
-        
+
         if message.get('source'):
             if message['source'] == 'pause':
                 self._away = True
