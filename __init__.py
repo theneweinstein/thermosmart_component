@@ -43,6 +43,8 @@ UPDATE_TIME = timedelta(seconds=30)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Required(CONF_API_CLIENT_ID): cv.string,
+        vol.Required(CONF_API_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_NAME): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
