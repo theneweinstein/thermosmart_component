@@ -22,12 +22,12 @@ DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
-API_CLIENT_ID = 'api-rob-b130d8f5123bf24b'
-API_CLIENT_SECRET = 'c1d91661eef0bc4fa2ac67fd'
-
 AUTH_CALLBACK_NAME = 'api:thermosmart'
 AUTH_CALLBACK_PATH = '/api/thermosmart'
 AUTH_DATA = 'thermosmart_auth'
+
+CONF_API_CLIENT_ID = 'client_id'
+CONF_API_CLIENT_SECRET = 'client_secret'
 
 CONFIGURATOR_DESCRIPTION = "To link your Thermosmart account, " \
                            "click the link, login, and authorize:"
@@ -64,9 +64,11 @@ def setup(hass, config):
     from thermosmart_hass import oauth2
 
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
+    client_id = config.get(CONF_API_CLIENT_ID)
+    client_secret = config.get(CONF_API_CLIENT_SECRET)
     cache = hass.config.path(DEFAULT_CACHE_PATH)
     oauth = oauth2.ThermosmartOAuth(
-        API_CLIENT_ID, API_CLIENT_SECRET,
+        client_id, client_secret,
         callback_url, cache_path=cache
     )
     token_info = oauth.get_cached_token()
