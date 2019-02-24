@@ -105,6 +105,11 @@ class ThermosmartThermostat(ClimateDevice):
         self._current_temperature = self._client.room_temperature()
         self._target_temperature = self._client.target_temperature()
 
+        if self._client.source() == 'pause':
+            self._away = True
+        else:
+            self._away = False
+
     def process_webhook(self, message):
         """Process a webhook message."""
         if message['thermostat'] != self._client_id:

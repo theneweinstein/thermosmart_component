@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['thermosmart_hass==0.4.0']
+REQUIREMENTS = ['thermosmart_hass==0.4.4']
 
 DEPENDENCIES = ['http']
 
@@ -66,8 +66,8 @@ def setup(hass, config):
     from thermosmart_hass import oauth2
 
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
-    client_id = config.get(CONF_API_CLIENT_ID)
-    client_secret = config.get(CONF_API_CLIENT_SECRET)
+    client_id = config[DOMAIN].get(CONF_API_CLIENT_ID)
+    client_secret = config[DOMAIN].get(CONF_API_CLIENT_SECRET)
     cache = hass.config.path(DEFAULT_CACHE_PATH)
     oauth = oauth2.ThermosmartOAuth(
         client_id, client_secret,
@@ -92,6 +92,8 @@ def setup(hass, config):
         hass, 'climate', DOMAIN,
         {CONF_NAME: config[DOMAIN].get(CONF_NAME, None)}, config
     )
+
+    _LOGGER.info(hass.data[DOMAIN].thermosmart.latest_update)
 
     if hass.data[DOMAIN].thermosmart.opentherm():
         discovery.load_platform(
