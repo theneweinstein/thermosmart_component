@@ -21,8 +21,11 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Thermosmart thermostat."""
     name = discovery_info['name']
-    thermostat = ThermosmartThermostat(name, hass.data[thermosmart.DOMAIN])
+    call_update = discovery_info['update']
+    thermostat = ThermosmartThermostat(name, hass.data[thermosmart.DOMAIN],
+        update=call_update)
     add_entities([thermostat])
+    thermosmart.WEBHOOK_SUBSCRIBERS.append(thermostat)
 
     return True
 
@@ -30,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThermosmartThermostat(ClimateDevice):
     """Representation of a Thermosmart thermostat."""
 
-    def __init__(self, name, data):
+    def __init__(self, name, data, update=True):
         """Initialize the thermostat."""
         self._data = data
         self._client = data.thermosmart
@@ -42,8 +45,10 @@ class ThermosmartThermostat(ClimateDevice):
             self._name = self._client.id
         self._away = False
         self._client_id = self._client.id
+        self._doupdate = True
         self.update_without_throttle = True
         self.update()
+        self._doupdate = update
 
     @property
     def supported_features(self):
@@ -96,6 +101,9 @@ class ThermosmartThermostat(ClimateDevice):
 
     def update(self):
         """Get the latest state from the thermostat."""
+        if not self._doupdate:
+            return
+
         if self.update_without_throttle:
             self._data.update(no_throttle=True)
             self.update_without_throttle = False

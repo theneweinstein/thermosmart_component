@@ -7,6 +7,7 @@ https://home-assistant.io/components/thermosmart/
 from datetime import timedelta
 import logging
 
+from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -18,7 +19,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = ['thermosmart_hass==0.4.4']
 
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ AUTH_DATA = 'thermosmart_auth'
 
 CONF_API_CLIENT_ID = 'client_id'
 CONF_API_CLIENT_SECRET = 'client_secret'
+CONF_WEBHOOK = 'webhook'
 
 CONFIGURATOR_DESCRIPTION = "To link your Thermosmart account, " \
                            "click the link, login, and authorize:"
@@ -41,11 +43,14 @@ DOMAIN = 'thermosmart'
 
 UPDATE_TIME = timedelta(seconds=30)
 
+WEBHOOK_SUBSCRIBERS  = []
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_CLIENT_ID): cv.string,
         vol.Required(CONF_API_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_NAME): cv.string
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_WEBHOOK): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -88,9 +93,18 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = ThermoSmartData(token_info)
 
+    call_update = True
+    webhook_id = config[DOMAIN].get(CONF_WEBHOOK, None)
+    if not webhook_id:
+        hass.data[DOMAIN].webhook(webhook_id)
+        hass.components.webhook.async_register(DOMAIN, 'Thermosmart', 
+            webhook_id, handle_webhook)
+        call_update = False
+
     discovery.load_platform(
         hass, 'climate', DOMAIN,
-        {CONF_NAME: config[DOMAIN].get(CONF_NAME, None)}, config
+        {CONF_NAME: config[DOMAIN].get(CONF_NAME, None),
+        'update': call_update}, config
     )
 
     _LOGGER.info(hass.data[DOMAIN].thermosmart.latest_update)
@@ -98,10 +112,23 @@ def setup(hass, config):
     if hass.data[DOMAIN].thermosmart.opentherm():
         discovery.load_platform(
             hass, 'sensor', DOMAIN,
-            {CONF_NAME: config[DOMAIN].get(CONF_NAME, None)}, config
+            {CONF_NAME: config[DOMAIN].get(CONF_NAME, None),
+            'update': call_update}, config
         )
 
     return True
+
+
+async def handle_webhook(hass, webhook_id, request):
+    """Hanlde a thermosmart webhook message."""
+    message = await request.json()
+
+    _LOGGER.debug(message)
+    # Callback to HA registered components.
+    for subscriber in WEBHOOK_SUBSCRIBERS:
+        subscriber.process_webhook(message)
+
+    return json_response([])
 
 
 class ThermosmartAuthCallbackView(HomeAssistantView):

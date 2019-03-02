@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Thermosmart platform."""
     name = discovery_info['name']
+    call_update = discovery_info['update']
 
     sensors = []
     _LOGGER.debug("Setting up platform.")
@@ -26,9 +27,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         get_CV_sensor_list()
     for _sensor in list(sensor_types.keys()):
         new_sensor = ThermosmartSensor(
-            name, hass.data[thermosmart.DOMAIN], _sensor)
+            name, hass.data[thermosmart.DOMAIN], _sensor, update=call_update)
         sensors.append(new_sensor)
     add_entities(sensors)
+    thermosmart.WEBHOOK_SUBSCRIBERS.append(sensors)
 
     return True
 
@@ -36,7 +38,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThermosmartSensor(Entity):
     """Representation of a Thermosmart sensor."""
 
-    def __init__(self, name, data, sensor, should_fire_event=False):
+    def __init__(self, name, data, sensor, update=True, 
+                    should_fire_event=False):
         """Initialize the sensor."""
         self._data = data
         self._client = self._data.thermosmart
@@ -51,6 +54,10 @@ class ThermosmartSensor(Entity):
             get_CV_sensor_list().get(sensor, '')
         self._state = None
         self.type = None
+        self._doupdate = True
+        self.update_without_throttle = True
+        self.update()
+        self._doupdate = update
         self.update_without_throttle = False
 
     def __str__(self):
@@ -74,6 +81,9 @@ class ThermosmartSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
+        if not self._doupdate:
+            return
+
         if self.update_without_throttle:
             self._data.update(no_throttle=True)
             self.update_without_throttle = False
@@ -85,3 +95,14 @@ class ThermosmartSensor(Entity):
                 self._client.latest_update['ot']['readable'][self.sensor]
         else:
             self._state = None
+        
+
+    def process_webhook(self, message):
+        """Process a webhook message."""
+        if message['thermostat'] != self._client_id:
+            return
+
+        if message.get('ot'):
+            converted_ot = self._client.convert_ot_data(message['ot']['raw'])
+            if converted_ot.get(self.sensor):
+                self._state = converted_ot[self.sensor]
