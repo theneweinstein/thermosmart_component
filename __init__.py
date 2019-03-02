@@ -95,7 +95,7 @@ def setup(hass, config):
 
     call_update = True
     webhook_id = config[DOMAIN].get(CONF_WEBHOOK, None)
-    if not webhook_id:
+    if webhook_id:
         hass.components.webhook.async_register(DOMAIN, 'Thermosmart', 
             webhook_id, handle_webhook)
         call_update = False
