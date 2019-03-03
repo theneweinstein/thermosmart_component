@@ -2,14 +2,14 @@
 The `thermosmart` component lets you control a thermostats and view sensor data (boiler information) from [Thermosmart](https://www.thermosmart.com) thermostats. 
 
 <p class='note'>
-Boiler information is only available if you have an OpenTherm boiler. 
+Boiler information is only available if you have an OpenTherm boiler.
 </p>
 
 ## Prerequisites
 You will need to obtain a **Client ID** and **Clien Secret** from Thermosmart. To obtain this, do the following:
 
 - Fill in the [ThermoSmart API client registration form](https://docs.google.com/forms/d/e/1FAIpQLScraqXO-gfGMM7COfuMugwmgRlYYsTA292TjwuZctgahCilwQ/viewform?c=0&w=1)
-- If you want to use webhooks, will in the **Webhook URL**:
+- The thermosmart can push changes to a webhook. If you want to use webhooks, fill in the **Webhook URL**:
   
   If you are not using SSL:
   `http://<your_home_assistant_url:<port>/api/webhook/WEBHOOK_ID`
@@ -39,7 +39,7 @@ thermosmart:
 
 **webhook_id**
 
-*(string)(optional)*  Webhook ID used to Thermosmart to send updates to.
+*(string)(optional)*  Webhook ID used to Thermosmart to send updates to (see Prerequisites). If you use webhooks, the update function (updates every 5 minutes) will be disabled.
 
 **name**
 
