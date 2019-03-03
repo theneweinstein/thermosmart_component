@@ -33,12 +33,12 @@ To set it up, add the following information to your `configuration.yaml` file:
 thermosmart:
   client_id: CLIENT_ID
   client_secret: CLIENT_SECRET
-  webhook_id: WEBHOOK_ID
+  webhook: WEBHOOK_ID
   name: NAME_THERMOSMART
 ```
 - **client_id** (*Required*): Client ID from Thermosmart.
 - **client_secret** (*Required*): Client Secret from Thermosmart.
-- **webhook_id** (*Optional*): Webhook ID used to Thermosmart to send updates to (see Prerequisites). If you use webhooks, the update function (updates every 5 minutes) will be disabled.
+- **webhook** (*Optional*): Webhook ID used to Thermosmart to send updates to (see Prerequisites). If you use webhooks, the update function (updates every 5 minutes) will be disabled.
 - **name** (*Optional*): A friendly name for the thermostat.
 
 The first time you run Home Assistant with this component, the **Thermosmart configurator** will be available. Follow the instructions to authorize Home Assistant. A Thermosmart thermostat will appear in Home Assistant. If you are prompted to download a file after completing authorization, discard the download. It is not needed.
