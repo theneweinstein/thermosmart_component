@@ -12,10 +12,10 @@ You will need to obtain a **Client ID** and **Clien Secret** from Thermosmart. T
 - If you want to use webhooks, will in the **Webhook URL**:
   
   If you are not using SSL:
-  `http://<your_home_assistant_url_or_local_ip>:<port>/api/webhook/WEBHOOK_ID`
+  `http://<your_home_assistant_url:<port>/api/webhook/WEBHOOK_ID`
 
   If you are using SSL:
-  `https://<your_home_assistant_url_or_local_ip>:<port>/api/webhook/WEBHOOK_ID`
+  `https://<your_home_assistant_url>:<port>/api/webhook/WEBHOOK_ID`
 
 ## Configuration
 To set it up, add the following information to your `configuration.yaml` file:
