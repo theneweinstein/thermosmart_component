@@ -7,8 +7,9 @@ https://home-assistant.io/components/thermosmart/
 import logging
 
 from custom_components import thermosmart
-from homeassistant.components.climate import (
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['thermosmart']
