@@ -9,14 +9,18 @@ import logging
 from custom_components import thermosmart
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['thermosmart']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE)
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+
+PRESET_MODES = [
+    PRESET_AWAY
+]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,6 +54,7 @@ class ThermosmartThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.update()
         self._doupdate = update
+        self._operation_list = [HVAC_MODE_AUTO]
 
     @property
     def supported_features(self):
@@ -84,21 +89,42 @@ class ThermosmartThermostat(ClimateDevice):
         self._client.set_target_temperature(temperature)
 
     @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._away
+    def preset_mode(self):
+        """Return the preset mode."""
+        if self._away:
+            return PRESET_AWAY
 
-    def turn_away_mode_on(self):
-        """Turn away on."""
-        self._away = True
-        self._client.pause_thermostat(True)
-        self.update_without_throttle = True
+        return None
 
-    def turn_away_mode_off(self):
-        """Turn away off."""
-        self._away = False
-        self._client.pause_thermostat(False)
-        self.update_without_throttle = True
+    @property
+    def preset_modes(self):
+        """Return a list of available preset modes."""
+        return PRESET_MODES
+
+    def set_preset_mode(self, preset_mode):
+        """Activate a preset."""
+        if preset_mode == self.preset_mode:
+            return
+
+        if preset_mode == PRESET_AWAY:
+            self._away = True
+            self._client.pause_thermostat(True)
+            self.update_without_throttle = True
+
+        if preset_mode == None:
+            self._away = False
+            self._client.pause_thermostat(False)
+            self.update_without_throttle = True       
+        
+    @property
+    def hvac_mode(self):
+        """Return current operation."""
+        return HVAC_MODE_AUTO
+
+    @property
+    def hvac_modes(self):
+        """Return the operation modes list."""
+        return self._operation_list
 
     def update(self):
         """Get the latest state from the thermostat."""
