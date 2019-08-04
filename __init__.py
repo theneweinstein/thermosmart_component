@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['thermosmart_hass==0.4.0']
+REQUIREMENTS = ['thermosmart-hass==0.4.0']
 
 DEPENDENCIES = ['http', 'webhook']
 

@@ -23,11 +23,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     _LOGGER.debug("Setting up platform.")
 
-    sensor_types = hass.data[thermosmart.DOMAIN].thermosmart.\
-        get_CV_sensor_list()
-    for _sensor in list(sensor_types.keys()):
-        new_sensor = ThermosmartSensor(
-            name, hass.data[thermosmart.DOMAIN], _sensor, update=call_update)
+    sensors_to_read = ['Control setpoint', 'Modulation level', 'Water pressure', 'Hot water flow rate', \
+                    'Hot water temperature', 'Return water temperature']
+    for _sensor in sensors_to_read:
+        new_sensor = ThermosmartSensor(hass.data[thermosmart.DOMAIN], _sensor, update=call_update)
         sensors.append(new_sensor)
     add_entities(sensors)
     thermosmart.WEBHOOK_SUBSCRIBERS.append(sensors)
@@ -38,15 +37,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThermosmartSensor(Entity):
     """Representation of a Thermosmart sensor."""
 
-    def __init__(self, name, data, sensor, update=True, 
+    def __init__(self, data, sensor, update=True, 
                     should_fire_event=False):
         """Initialize the sensor."""
         self._data = data
         self._client = self._data.thermosmart
-        if name:
-            self._name = name
-        else:
-            self._name = self._client.id
+        self._name = self._client.id
         self._client_id = self._client.id
         self.should_fire_event = should_fire_event
         self.sensor = sensor
@@ -72,7 +68,7 @@ class ThermosmartSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return "{} {}".format(self._name, self.sensor)
+        return "{} {}".format('Boiler', self.sensor)
 
     @property
     def unit_of_measurement(self):

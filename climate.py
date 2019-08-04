@@ -9,7 +9,8 @@ import logging
 from custom_components import thermosmart
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY)
+    HVAC_MODE_AUTO, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY, 
+    PRESET_NONE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_IDLE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 DEPENDENCIES = ['thermosmart']
@@ -17,10 +18,6 @@ DEPENDENCIES = ['thermosmart']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
-
-PRESET_MODES = [
-    PRESET_AWAY
-]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,6 +41,7 @@ class ThermosmartThermostat(ClimateDevice):
         self._client = data.thermosmart
         self._current_temperature = None
         self._target_temperature = None
+        self._current_HVAC = None
         if name:
             self._name = name
         else:
@@ -54,7 +52,7 @@ class ThermosmartThermostat(ClimateDevice):
         self.update_without_throttle = True
         self.update()
         self._doupdate = update
-        self._operation_list = [HVAC_MODE_AUTO]
+        self.update_without_throttle = False       
 
     @property
     def supported_features(self):
@@ -94,14 +92,15 @@ class ThermosmartThermostat(ClimateDevice):
         if self._away:
             return PRESET_AWAY
 
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        return PRESET_MODES
+        return [PRESET_AWAY, PRESET_NONE]
 
-    def set_preset_mode(self, preset_mode):
+
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
         if preset_mode == self.preset_mode:
             return
@@ -111,7 +110,7 @@ class ThermosmartThermostat(ClimateDevice):
             self._client.pause_thermostat(True)
             self.update_without_throttle = True
 
-        if preset_mode == None:
+        if preset_mode == PRESET_NONE:
             self._away = False
             self._client.pause_thermostat(False)
             self.update_without_throttle = True       
@@ -124,7 +123,16 @@ class ThermosmartThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the operation modes list."""
-        return self._operation_list
+        return [HVAC_MODE_AUTO]
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        return
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported."""
+        return self._current_HVAC
 
     def update(self):
         """Get the latest state from the thermostat."""
@@ -137,9 +145,21 @@ class ThermosmartThermostat(ClimateDevice):
         else:
             self._data.update()
 
+        # Get temperatures
         self._current_temperature = self._client.room_temperature()
         self._target_temperature = self._client.target_temperature()
 
+        # Check if opentherm is enabled
+        if self._client.latest_update.get('ot'):
+            # Find current HVAC action
+            if self._client.latest_update['ot']['readable']['CH_enabled']:
+                self._current_HVAC =  CURRENT_HVAC_HEAT
+            elif self._client.latest_update['ot']['readable']['Cooling_enabled']:
+                self._current_HVAC =  CURRENT_HVAC_COOL
+            else:
+                self._current_HVAC =  CURRENT_HVAC_IDLE
+
+        # Check if thermomsmart is paused
         if self._client.source() == 'pause':
             self._away = True
         else:
@@ -155,6 +175,24 @@ class ThermosmartThermostat(ClimateDevice):
 
         if message.get('target_temperature'):
             self._target_temperature = message['target_temperature']
+
+        if message.get('ot'):
+            converted_ot = self._client.convert_ot_data(message['ot']['raw'])
+            if converted_ot.get('CH_enabled') & converted_ot.get('Cooling_enabled'):
+                if converted_ot['CH_enabled']:
+                    self._current_HVAC =  CURRENT_HVAC_HEAT
+                if converted_ot['Cooling_enabled']:
+                    self._current_HVAC =  CURRENT_HVAC_COOL
+            elif converted_ot.get('CH_enabled'):
+                if converted_ot['CH_enabled']:
+                    self._current_HVAC =  CURRENT_HVAC_HEAT
+                else:
+                    self._current_HVAC =  CURRENT_HVAC_IDLE
+            elif converted_ot.get('Cooling_enabled'):
+                if converted_ot['Cooling_enabled']:
+                    self._current_HVAC =  CURRENT_HVAC_COOL
+                else:
+                    self._current_HVAC =  CURRENT_HVAC_IDLE
 
         if message.get('source'):
             if message['source'] == 'pause':
