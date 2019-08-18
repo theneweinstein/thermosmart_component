@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_sensor = ThermosmartSensor(hass.data[thermosmart.DOMAIN], _sensor, update=call_update)
         sensors.append(new_sensor)
     add_entities(sensors)
-    thermosmart.WEBHOOK_SUBSCRIBERS.append(sensors)
+    thermosmart.WEBHOOK_SUBSCRIBERS.extend(sensors)
 
     return True
 
