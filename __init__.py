@@ -122,7 +122,6 @@ async def handle_webhook(hass, webhook_id, request):
     """Hanlde a thermosmart webhook message."""
     message = await request.json()
 
-    _LOGGER.debug(message)
     # Callback to HA registered components.
     for subscriber in WEBHOOK_SUBSCRIBERS:
         subscriber.process_webhook(message)

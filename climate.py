@@ -7,9 +7,9 @@ https://home-assistant.io/components/thermosmart/
 import logging
 
 from custom_components import thermosmart
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY, 
+    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY, 
     PRESET_NONE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_IDLE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class ThermosmartThermostat(ClimateDevice):
+class ThermosmartThermostat(ClimateEntityh):
     """Representation of a Thermosmart thermostat."""
 
     def __init__(self, name, data, update=True):
@@ -127,13 +127,16 @@ class ThermosmartThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the operation modes list."""
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        if self._client.latest_update['ot']['readable']['Cooling_config']:
+            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+        else:
+            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
             self._client.pause_thermostat(False)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif (hvac_mode == HVAC_MODE_HEAT) or (hvac_mode == HVAC_MODE_COOL):
             self._client.set_target_temperature(self._target_temperature)
         
         self._override_update = True
@@ -187,8 +190,6 @@ class ThermosmartThermostat(ClimateDevice):
 
     def process_webhook(self, message):
         """Process a webhook message."""
-        _LOGGER.debug("Webhook came in:")
-        _LOGGER.debug(message)
         if message['thermostat'] != self._client_id:
             return
 
@@ -200,21 +201,12 @@ class ThermosmartThermostat(ClimateDevice):
 
         if message.get('ot'):
             converted_ot = self._client.convert_ot_data(message['ot']['raw'])
-            if ('CH_enabled' in converted_ot) & ('Cooling_enabled' in converted_ot):
-                if converted_ot['CH_enabled']:
-                    self._current_HVAC =  CURRENT_HVAC_HEAT
-                if converted_ot['Cooling_enabled']:
-                    self._current_HVAC =  CURRENT_HVAC_COOL
-            elif 'CH_enabled' in converted_ot:
-                if converted_ot['CH_enabled']:
-                    self._current_HVAC =  CURRENT_HVAC_HEAT
-                else:
-                    self._current_HVAC =  CURRENT_HVAC_IDLE
-            elif 'Cooling_enabled' in converted_ot:
-                if converted_ot['Cooling_enabled']:
-                    self._current_HVAC =  CURRENT_HVAC_COOL
-                else:
-                    self._current_HVAC =  CURRENT_HVAC_IDLE
+            if converted_ot['CH_enabled']:
+                self._current_HVAC =  CURRENT_HVAC_HEAT
+            elif converted_ot['Cooling_enabled']:
+                self._current_HVAC =  CURRENT_HVAC_COOL
+            else:
+                self._current_HVAC =  CURRENT_HVAC_IDLE
 
         if message.get('source'):
             if message['source'] == 'pause':
