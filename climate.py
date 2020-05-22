@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class ThermosmartThermostat(ClimateEntityh):
+class ThermosmartThermostat(ClimateEntity):
     """Representation of a Thermosmart thermostat."""
 
     def __init__(self, name, data, update=True):
