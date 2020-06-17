@@ -14,6 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.network import get_url
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -70,7 +71,7 @@ def setup(hass, config):
     """Set up the Thermosmart."""
     from thermosmart_hass import oauth2
 
-    callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
+    callback_url = '{}{}'.format(get_url(hass), AUTH_CALLBACK_PATH)
     client_id = config[DOMAIN].get(CONF_API_CLIENT_ID)
     client_secret = config[DOMAIN].get(CONF_API_CLIENT_SECRET)
     cache = hass.config.path(DEFAULT_CACHE_PATH)
