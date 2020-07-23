@@ -71,6 +71,11 @@ class ThermosmartSensor(Entity):
         return "{} {}".format('Boiler', self.sensor)
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._client_id + '_' + self.sensor
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement

@@ -66,6 +66,11 @@ class ThermosmartThermostat(ClimateEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._client_id
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
