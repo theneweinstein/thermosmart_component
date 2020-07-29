@@ -2,7 +2,7 @@
 The `thermosmart` component lets you control a thermostats and view sensor data (boiler information) from [Thermosmart](https://www.thermosmart.com) thermostats. 
 
 <p class='note'>
-Boiler information is only available if you have an OpenTherm boiler.
+Boiler information is only available if you have an OpenTherm boiler and if the ot-scope is enabled by Thermosmart for your API-keys.
 </p>
 
 ## Prerequisites
@@ -18,12 +18,7 @@ You will need to obtain a **Client ID** and **Client Secret** from Thermosmart. 
   `https://<your_home_assistant_url>:<port>/api/webhook/WEBHOOK_ID`
   
 ## Installation
-On your Home Assistant instance, go to <config directory>/custom_components. Now clone this resposity: `git clone https://github.com/theneweinstein/thermosmart_component.git thermosmart`. Alternatively you can copy the files (first create a *thermosmart* folder):
-```
-__init__.py ---> <config directory>/custom_components/thermosmart
-climate.py ---> <config directory>/custom_components/thermosmart
-sensor.py ---> <config directory>/custom_components/thermosmart
-```
+On your Home Assistant instance, go to <config directory>/custom_components. Now clone this resposity: `git clone https://github.com/theneweinstein/thermosmart_component.git thermosmart`. Alternatively you can manually copy the files into the *thermosmart* folder.
   
 ## Configuration
 To set it up, add the following information to your `configuration.yaml` file:
@@ -34,12 +29,10 @@ thermosmart:
   client_id: CLIENT_ID
   client_secret: CLIENT_SECRET
   webhook: WEBHOOK_ID
-  name: NAME_THERMOSMART
 ```
 - **client_id** (*Required*): Client ID from Thermosmart.
 - **client_secret** (*Required*): Client Secret from Thermosmart.
 - **webhook** (*Optional*): Webhook ID used to Thermosmart to send updates to (see Prerequisites). If you use webhooks, the update function (updates every 5 minutes) will be disabled.
-- **name** (*Optional*): A friendly name for the thermostat.
 
-The first time you run Home Assistant with this component, the **Thermosmart configurator** will be available. Follow the instructions to authorize Home Assistant. A Thermosmart thermostat will appear in Home Assistant. If you are prompted to download a file after completing authorization, discard the download. It is not needed.
+The first time you run Home Assistant with this component, go the Configure>Integrations page and add **Thermosmart**. Follow the instructions to authorize Home Assistant. A Thermosmart thermostat will appear in Home Assistant.
 
