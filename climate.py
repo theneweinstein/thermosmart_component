@@ -75,7 +75,6 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         if temperature is None:
             return
         self._thermosmart.set_target_temperature(temperature)
-        self.set_hvac_mode(HVAC_MODE_HEAT)
         self._force_update = True
         self.async_update()
 
@@ -130,7 +129,7 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
             self._force_update = True
             self.async_update()
         elif (hvac_mode == HVAC_MODE_HEAT) or (hvac_mode == HVAC_MODE_COOL):
-            #self._thermosmart.set_target_temperature(self.target_temperature)
+            self._thermosmart.set_target_temperature(self.target_temperature)
             self._force_update = True
             self.async_update()
 
