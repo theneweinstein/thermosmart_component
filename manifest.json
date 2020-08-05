@@ -5,6 +5,6 @@
     "dependencies": [],
     "after_dependencies": [],
     "codeowners": [],
-    "requirements": ["thermosmart_hass==0.6.0"],
+    "requirements": ["thermosmart_hass==0.6.4"],
     "config_flow": true
 }

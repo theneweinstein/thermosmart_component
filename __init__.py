@@ -155,6 +155,7 @@ class ThermosmartEntity(Entity):
         """Initialize the Somfy device."""
         self._device = device
         self._do_update = do_update
+        self._force_update = False
         self._thermosmart = self._device.thermosmart
         self._client_id = self._thermosmart.device_id
 
@@ -179,6 +180,9 @@ class ThermosmartEntity(Entity):
         """Get the latest data and updates the states."""
         if self._do_update:
             await self._device.update()
+        if self._force_update:
+            await self._device.update(no_throttle=True)
+            self._force_update = False
 
     def webhook_update(self):
         """Update entity when webhook arrived.""" 

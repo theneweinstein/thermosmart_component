@@ -38,9 +38,6 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(device, do_update = do_update)
         self._name = "Thermosmart"
-        self._current_HVAC = None
-        self._HVAC_mode = None
-        self._away = False
 
     @property
     def supported_features(self):
@@ -78,16 +75,16 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         if temperature is None:
             return
         self._thermosmart.set_target_temperature(temperature)
-        self._HVAC_mode = HVAC_MODE_HEAT
+        self.set_hvac_mode(HVAC_MODE_HEAT)
+        self._force_update = True
+        self.async_update()
 
     @property
     def preset_mode(self):
         """Return the preset mode."""
         if self._thermosmart.source() == 'pause':
-            self._away = True
             return PRESET_AWAY
         else:
-            self._away = False
             return PRESET_NONE
 
     @property
@@ -102,22 +99,21 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
             return
 
         if preset_mode == PRESET_AWAY:
-            self._away = True
             self._thermosmart.pause_thermostat(True)
 
         if preset_mode == PRESET_NONE:
-            self._away = False
             self._thermosmart.pause_thermostat(False)  
+
+        self._force_update = True
+        self.async_update()
         
     @property
     def hvac_mode(self):
         """Return current operation."""
         if self._thermosmart.source() == 'remote' or self._thermosmart.source() == 'manual':
-            self._HVAC_mode = HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT
         elif self._thermosmart.source() == 'schedule' or self._thermosmart.source() == 'exception':
-            self._HVAC_mode = HVAC_MODE_AUTO
-
-        return self._HVAC_mode
+            return HVAC_MODE_AUTO
 
     @property
     def hvac_modes(self):
@@ -131,8 +127,12 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
             self._thermosmart.pause_thermostat(False)
+            self._force_update = True
+            self.async_update()
         elif (hvac_mode == HVAC_MODE_HEAT) or (hvac_mode == HVAC_MODE_COOL):
-            self._thermosmart.set_target_temperature(self._target_temperature)
+            #self._thermosmart.set_target_temperature(self.target_temperature)
+            self._force_update = True
+            self.async_update()
 
     @property
     def hvac_action(self):
@@ -140,11 +140,10 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         if self._thermosmart.data.get('ot'):
             # Find current HVAC action
             if self._thermosmart.data['ot']['readable']['CH_enabled']:
-                self._current_HVAC =  CURRENT_HVAC_HEAT
+                return CURRENT_HVAC_HEAT
             elif self._thermosmart.data['ot']['readable']['Cooling_enabled']:
-                self._current_HVAC =  CURRENT_HVAC_COOL
+                return CURRENT_HVAC_COOL
             else:
-                self._current_HVAC =  CURRENT_HVAC_IDLE
+                return CURRENT_HVAC_IDLE
             
-        return self._current_HVAC
 
