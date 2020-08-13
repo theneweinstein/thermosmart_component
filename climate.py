@@ -118,7 +118,7 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
     def hvac_modes(self):
         """Return the operation modes list."""
         # Check if opentherm is enabled
-        if self._thermosmart.data('ot') and self._thermosmart.data['ot']['readable']['Cooling_config']:
+        if self._thermosmart.data.get('ot') and self._thermosmart.data['ot']['readable']['Cooling_config']:
             return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
         else:
             return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
