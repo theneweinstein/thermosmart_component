@@ -117,19 +117,16 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the operation modes list."""
-<<<<<<< HEAD
         # Check if opentherm is enabled
         if self._client.latest_update.get('ot'):
             if self._client.latest_update['ot']['readable']['Cooling_config']:
                 return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
         
         return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
-=======
         if self._thermosmart.data['ot']['readable']['Cooling_config']:
             return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
         else:
             return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
->>>>>>> f4be78e5339bdeeb27b4ffb69163eac366e023ef
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""

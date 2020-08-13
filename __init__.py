@@ -50,41 +50,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 WEBHOOK_SUBSCRIBERS = []
 
-<<<<<<< HEAD
-def request_configuration(hass, config, oauth):
-    """Request Thermomosmart autorization."""
-    configurator = hass.components.configurator
-    hass.data[AUTH_DATA] = configurator.request_config(
-        DEFAULT_NAME, lambda _: None,
-        link_name=CONFIGURATOR_LINK_NAME,
-        link_url=oauth.get_authorize_url(),
-        description=CONFIGURATOR_DESCRIPTION,
-        submit_caption=CONFIGURATOR_SUBMIT_CAPTION)
-
-
-def setup(hass, config):
-    """Set up the Thermosmart."""
-    from thermosmart_hass import oauth2
-
-    callback_url = '{}{}'.format(get_url(hass), AUTH_CALLBACK_PATH)
-    client_id = config[DOMAIN].get(CONF_API_CLIENT_ID)
-    client_secret = config[DOMAIN].get(CONF_API_CLIENT_SECRET)
-    cache = hass.config.path(DEFAULT_CACHE_PATH)
-    oauth = oauth2.ThermosmartOAuth(
-        client_id, client_secret,
-        callback_url, cache_path=cache
-    )
-    token_info = oauth.get_cached_token()
-    if not token_info:
-        _LOGGER.info("No token, requesting authorization.")
-        hass.http.register_view(ThermosmartAuthCallbackView(
-            config, oauth))
-        request_configuration(hass, config, oauth)
-=======
 async def async_setup(hass, config):
     """Set up the Thermosmart component."""
     if DOMAIN not in config:
->>>>>>> f4be78e5339bdeeb27b4ffb69163eac366e023ef
         return True
 
     hass.data[DOMAIN] = {}
