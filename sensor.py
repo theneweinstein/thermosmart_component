@@ -9,9 +9,8 @@ import logging
 
 from custom_components import thermosmart
 from custom_components.thermosmart import BoilerEntity
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from .const import DEVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class ThermosmartSensor(BoilerEntity, Entity):
+class ThermosmartSensor(BoilerEntity, SensorEntity):
     """Representation of a Thermosmart sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
