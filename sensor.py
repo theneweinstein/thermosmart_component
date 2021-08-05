@@ -10,6 +10,8 @@ import logging
 from custom_components import thermosmart
 from custom_components.thermosmart import BoilerEntity
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from .const import DEVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +41,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class ThermosmartSensor(BoilerEntity, Entity):
     """Representation of a Thermosmart sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, device, sensor, do_update = True):
         """Initialize the sensor."""
@@ -76,3 +80,12 @@ class ThermosmartSensor(BoilerEntity, Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        if self.sensor == 'Control setpoint' or 'Hot water temperature' or 'Return water temperature':
+            return DEVICE_CLASS_TEMPERATURE
+        if self.sensor == 'Water pressure':
+            return DEVICE_CLASS_PRESSURE
+        else:
+            return None
