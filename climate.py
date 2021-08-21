@@ -34,40 +34,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
     """Representation of a Thermosmart thermostat."""
 
+    _attr_supported_features = SUPPORT_FLAGS
+
     def __init__(self, device, do_update = True):
         """Initialize the thermostat."""
         super().__init__(device, do_update = do_update)
-        self._name = "Thermosmart"
+        self._attr_name = "Thermosmart"
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._client_id)},
+            "name": "Thermosmart",
+            "model": "V3",
+            "manufacturer": "Thermosmart",
+        }
+        self._attr_unique_id = self._client_id + '_climate'
 
-    @property
-    def name(self):
-        """Return the name of the Thermosmart, if any."""
-        return self._name
+        self._attr_current_temperature = self._thermosmart.room_temperature()
+        self._attr_target_temperature = self._thermosmart.target_temperature()
+        self._attr_temperature_unit = TEMP_CELSIUS
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._client_id + '_climate'
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._thermosmart.room_temperature()
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._thermosmart.target_temperature()
+        self._attr_preset_modes = [PRESET_AWAY, PRESET_NONE]
+        self._attr_preset_mode = PRESET_AWAY if self._thermosmart.source() == 'pause' else PRESET_NONE
+        self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self._thermosmart.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -77,20 +65,6 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         self._thermosmart.set_target_temperature(temperature)
         self._force_update = True
         self.async_update()
-
-    @property
-    def preset_mode(self):
-        """Return the preset mode."""
-        if self._thermosmart.source() == 'pause':
-            return PRESET_AWAY
-        else:
-            return PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes."""
-        return [PRESET_AWAY, PRESET_NONE]
-
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -115,12 +89,16 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
             return HVAC_MODE_AUTO
 
     @property
-    def hvac_modes(self):
-        """Return the operation modes list."""
-        if self._thermosmart.data['ot']['readable']['Cooling_config']:
-            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
-        else:
-            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+    def hvac_action(self):
+        """Return the current running hvac operation if supported."""
+        if self._thermosmart.data.get('ot'):
+            # Find current HVAC action
+            if self._thermosmart.data['ot']['readable']['CH_enabled']:
+                return CURRENT_HVAC_HEAT
+            elif self._thermosmart.data['ot']['readable']['Cooling_enabled']:
+                return CURRENT_HVAC_COOL
+            else:
+                return CURRENT_HVAC_IDLE
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -132,17 +110,5 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
             self._thermosmart.set_target_temperature(self.target_temperature)
             self._force_update = True
             self.async_update()
-
-    @property
-    def hvac_action(self):
-        """Return the current running hvac operation if supported."""
-        if self._thermosmart.data.get('ot'):
-            # Find current HVAC action
-            if self._thermosmart.data['ot']['readable']['CH_enabled']:
-                return CURRENT_HVAC_HEAT
-            elif self._thermosmart.data['ot']['readable']['Cooling_enabled']:
-                return CURRENT_HVAC_COOL
-            else:
-                return CURRENT_HVAC_IDLE
             
 

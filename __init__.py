@@ -7,12 +7,9 @@ https://home-assistant.io/components/thermosmart/
 from datetime import timedelta
 import logging
 
-import asyncio
-from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant.core import callback
-from custom_components.thermosmart import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import (
@@ -29,7 +26,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import api
-from .const import DOMAIN, AUTH_URL_AUTHORIZATION, AUTH_URL_TOKEN, API, PLATFORMS, DEVICE, UNSUB, CONFIG
+from .const import DOMAIN, API, PLATFORMS, DEVICE, CONFIG
 from .oauth2 import register_oauth2_implementations
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,18 +156,6 @@ class ThermosmartEntity(Entity):
         self._thermosmart = self._device.thermosmart
         self._client_id = self._thermosmart.device_id
 
-    @property
-    def device_info(self):
-        """Return device specific attributes.
-        Implemented by platform classes.
-        """
-        return {
-            "identifiers": {(DOMAIN, self._client_id)},
-            "name": "Thermosmart",
-            "model": "V3",
-            "manufacturer": "Thermosmart",
-        }
-
     @callback
     def async_update_callback(self, reason):
         """Update the device's state."""
@@ -187,20 +172,4 @@ class ThermosmartEntity(Entity):
     def webhook_update(self):
         """Update entity when webhook arrived.""" 
         self.async_schedule_update_ha_state()
-
-class BoilerEntity(ThermosmartEntity):
-    """Generic entity for boiler."""
-
-    @property
-    def device_info(self):
-        """Return device specific attributes.
-        Implemented by platform classes.
-        """
-        return {
-            "identifiers": {(DOMAIN, self._client_id + '_boiler')},
-            "name": "Boiler",
-            "model": "n/a",
-            "manufacturer": "Generic",
-            "via_device": (DOMAIN, self._client_id)
-        }
 

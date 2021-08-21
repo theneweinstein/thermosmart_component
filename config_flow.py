@@ -1,14 +1,9 @@
 import logging
 
-import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant import config_entries
 from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+    config_entry_oauth2_flow)
 
 from .const import DOMAIN
 

@@ -1,11 +1,8 @@
 """API for Thermosmart bound to Home Assistant OAuth."""
-from asyncio import run_coroutine_threadsafe
-from typing import Dict, Union
 
 from thermosmart_hass import thermosmart_api
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_entry_oauth2_flow
 
 

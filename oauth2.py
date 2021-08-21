@@ -1,6 +1,6 @@
 """OAuth2 implementations for Thermosmart."""
 import logging
-from typing import Any, Optional, cast
+from typing import cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
