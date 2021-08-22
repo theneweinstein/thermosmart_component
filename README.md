@@ -18,7 +18,7 @@ You will need to obtain a **Client ID** and **Client Secret** from Thermosmart. 
   `https://<your_home_assistant_url>:<port>/api/webhook/WEBHOOK_ID`
   
 ## Installation
-On your Home Assistant instance, go to <config directory>/custom_components. Now clone this resposity: `git clone https://github.com/theneweinstein/thermosmart_component.git thermosmart`. Alternatively you can manually copy the files into the *thermosmart* folder.
+You can install this component via HACS by adding this resposistory as a [custom respository](https://github.com/theneweinstein/thermosmart_component.git). Alternatively you can manually copy the files into the *thermosmart* folder in the `config` directory.
   
 ## Configuration
 To set it up, add the following information to your `configuration.yaml` file:
