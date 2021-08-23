@@ -49,12 +49,9 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         }
         self._attr_unique_id = self._client_id + '_climate'
 
-        self._attr_current_temperature = self._thermosmart.room_temperature()
-        self._attr_target_temperature = self._thermosmart.target_temperature()
         self._attr_temperature_unit = TEMP_CELSIUS
 
         self._attr_preset_modes = [PRESET_AWAY, PRESET_NONE]
-        self._attr_preset_mode = PRESET_AWAY if self._thermosmart.source() == 'pause' else PRESET_NONE
         self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self._thermosmart.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
     def set_temperature(self, **kwargs):
@@ -79,6 +76,18 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
 
         self._force_update = True
         self.async_update()
+
+    @property
+    def current_temperature(self):
+        return self._thermosmart.room_temperature()
+
+    @property
+    def target_temperature(self):
+        return self._thermosmart.target_temperature()
+
+    @property
+    def preset_mode(self):
+        return PRESET_AWAY if self._thermosmart.source() == 'pause' else PRESET_NONE
         
     @property
     def hvac_mode(self):
