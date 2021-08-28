@@ -49,8 +49,7 @@ class ThermosmartSensor(ThermosmartEntity, SensorEntity):
         self._attr_name = 'Boiler, ' + sensor
         self._sensor = sensor
 
-        self._attr_state = self._thermosmart.data['ot']['readable'][sensor] if self._thermosmart.data.get('ot') else None
-        self._attr_unit_of_measurement = self._thermosmart.get_CV_sensor_list().get(sensor, '')
+        self._attr_native_unit_of_measurement = self._thermosmart.get_CV_sensor_list().get(sensor, '')
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._client_id + '_boiler')},
@@ -68,6 +67,6 @@ class ThermosmartSensor(ThermosmartEntity, SensorEntity):
             self._attr_device_class = None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._thermosmart.data['ot']['readable'][self._sensor] if self._thermosmart.data.get('ot') else None

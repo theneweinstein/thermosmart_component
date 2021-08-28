@@ -3,5 +3,5 @@
     "render_readme": true,
     "domains": ["sensor","climate"],
     "iot_class": "cloud_push",
-    "homeassistant": "2021.7"
+    "homeassistant": "2021.8"
   }
