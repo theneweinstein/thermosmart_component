@@ -38,11 +38,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required("start_day"): vol.All(cv.positive_int, vol.Range(min=1,max=31)),
             vol.Required("start_month"): vol.All(cv.positive_int, vol.Range(min=1,max=12)),
-            vol.Optional("start_year",): cv.positive_int, 
-            vol.Optional("start_time"): cv.time,
+            vol.Required("start_year",): cv.positive_int, 
+            vol.Required("start_time"): cv.time,
             vol.Required("end_day"): vol.All(cv.positive_int, vol.Range(min=1,max=31)),
             vol.Required("end_month"): vol.All(cv.positive_int, vol.Range(min=1,max=12)),
-            vol.Optional("end_year",): cv.positive_int, 
+            vol.Required("end_year",): cv.positive_int, 
             vol.Required("end_time"): cv.time,
             vol.Required("program"): vol.All(cv.string, vol.In(["anti_freeze","not_home","home","comfort"]))
         },

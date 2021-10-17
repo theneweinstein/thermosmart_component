@@ -45,7 +45,7 @@ add_exception:
       name: Start year
       description: Year at with the exception starts.
       # Whether or not field is required (default = false)
-      required: false
+      required: true
       # Example value that can be passed for this field
       example: 2021
       # The default field value
@@ -101,7 +101,7 @@ add_exception:
       name: End year
       description: Year at with the exception ends.
       # Whether or not field is required (default = false)
-      required: false
+      required: true
       # Example value that can be passed for this field
       example: 2021
       # The default field value
