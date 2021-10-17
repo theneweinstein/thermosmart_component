@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermosmart/
 """
 import logging
+import voluptuous as vol
 
 from custom_components import thermosmart
 from custom_components.thermosmart import ThermosmartEntity
@@ -16,6 +17,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL, SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_AWAY, 
     PRESET_NONE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_IDLE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +32,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([thermostat])
     thermosmart.WEBHOOK_SUBSCRIBERS.append(thermostat)
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        'add_exception',
+        {
+            vol.Required("start_day"): cv.positive_int, 
+            vol.Required("start_month"): cv.positive_int, 
+            vol.Optional("start_year",): cv.positive_int, 
+            vol.Optional("start_time"): cv.time,
+            vol.Required("end_day"): cv.positive_int, 
+            vol.Required("end_month"): cv.positive_int, 
+            vol.Optional("end_year",): cv.positive_int, 
+            vol.Required("end_time"): cv.time,
+            vol.Required("program"): vol.All(cv.string, vol.In(["anti_freeze","not_home","home","comfort"]))
+        },
+        'add_exception'
+    )
+
+    platform.async_register_entity_service(
+        'clear_exceptions',
+        {},
+        'clear_exceptions'
+    )
 
 class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
     """Representation of a Thermosmart thermostat."""
@@ -53,6 +77,7 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
 
         self._attr_preset_modes = [PRESET_AWAY, PRESET_NONE]
         self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self._thermosmart.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        self._exceptions = self._thermosmart.exceptions()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -119,5 +144,21 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
             self._thermosmart.set_target_temperature(self.target_temperature)
             self._force_update = True
             self.async_update()
+
+    # Define service-calls
+    def add_exception(self,start_day, start_month, start_year, start_time, end_day, end_month, end_year, end_time, program):
+        """Add exceptions to the current list."""
+        exceptions = self._exceptions
+
+        new_exception = {"start": [start_year, start_month, start_day, start_time.hour, start_time.minute],
+                        "end": [end_year, end_month, end_day, end_time.hour, end_time.minute],
+                        "temperature": program}
+
+        exceptions.append(new_exception)
+
+    def clear_exceptions(self):
+        """Clear all exceptions."""
+        self._thermosmart.set_exceptions([])
+
             
 
