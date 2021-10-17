@@ -156,6 +156,8 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
 
         exceptions.append(new_exception)
 
+        self._thermosmart.set_exceptions(exceptions)
+
     def clear_exceptions(self):
         """Clear all exceptions."""
         self._thermosmart.set_exceptions([])
