@@ -36,12 +36,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(
         'add_exception',
         {
-            vol.Required("start_day"): cv.positive_int, 
-            vol.Required("start_month"): cv.positive_int, 
+            vol.Required("start_day"): vol.All(cv.positive_int, vol.Range(min=1,max=31)),
+            vol.Required("start_month"): vol.All(cv.positive_int, vol.Range(min=1,max=12)),
             vol.Optional("start_year",): cv.positive_int, 
             vol.Optional("start_time"): cv.time,
-            vol.Required("end_day"): cv.positive_int, 
-            vol.Required("end_month"): cv.positive_int, 
+            vol.Required("end_day"): vol.All(cv.positive_int, vol.Range(min=1,max=31)),
+            vol.Required("end_month"): vol.All(cv.positive_int, vol.Range(min=1,max=12)),
             vol.Optional("end_year",): cv.positive_int, 
             vol.Required("end_time"): cv.time,
             vol.Required("program"): vol.All(cv.string, vol.In(["anti_freeze","not_home","home","comfort"]))
@@ -150,8 +150,8 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
         """Add exceptions to the current list."""
         exceptions = self._exceptions
 
-        new_exception = {"start": [start_year, start_month, start_day, start_time.hour, start_time.minute],
-                        "end": [end_year, end_month, end_day, end_time.hour, end_time.minute],
+        new_exception = {"start": [start_year, start_month-1, start_day, start_time.hour, round(start_time.minute/15)*15],
+                        "end": [end_year, end_month-1, end_day, end_time.hour, round(end_time.minute/15)*15],
                         "temperature": program}
 
         exceptions.append(new_exception)
