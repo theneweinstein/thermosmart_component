@@ -7,5 +7,5 @@
     "codeowners": ["@theneweinstein"],
     "requirements": ["thermosmart_hass==0.6.4"],
     "config_flow": true,
-    "version": "1.0.4"
+    "version": "1.0.5"
 }

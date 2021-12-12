@@ -9,8 +9,7 @@ import logging
 
 from custom_components import thermosmart
 from custom_components.thermosmart import ThermosmartEntity
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, STATE_CLASS_MEASUREMENT, SensorEntity
 from .const import DEVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,9 +59,9 @@ class ThermosmartSensor(ThermosmartEntity, SensorEntity):
         }
         self._attr_unique_id = self._client_id + '_' + sensor
         if sensor == 'Control setpoint' or 'Hot water temperature' or 'Return water temperature':
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
         if sensor == 'Water pressure':
-            self._attr_device_class =  DEVICE_CLASS_PRESSURE
+            self._attr_device_class =  SensorDeviceClass.PRESSURE
         else:
             self._attr_device_class = None
 
