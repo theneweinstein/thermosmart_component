@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from . import api
+from thermosmart_hass import thermosmart_api
 from .const import DOMAIN, API, PLATFORMS, DEVICE, CONFIG
 from .oauth2 import register_oauth2_implementations
 
@@ -51,10 +51,6 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][CONFIG] = config[DOMAIN]
-    
-    register_oauth2_implementations(
-        hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
-    )
 
     return True
 
@@ -65,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass, entry
     )
 
-    thermo_api = api.ConfigEntryThermosmartApi(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    thermo_api = thermosmart_api.ThermosmartApi(token=session.token)
     thermo_id =  await hass.async_add_executor_job(thermo_api.get_thermostat_id)
     
     hass.data[DOMAIN][entry.entry_id] = {
