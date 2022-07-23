@@ -21,18 +21,8 @@ You will need to obtain a **Client ID** and **Client Secret** from Thermosmart. 
 You can install this component via HACS by adding this resposistory as a [custom respository](https://github.com/theneweinstein/thermosmart_component.git). Alternatively you can manually copy the files into the *thermosmart* folder in the `config` directory.
   
 ## Configuration
-To set it up, add the following information to your `configuration.yaml` file:
+To set it up, go to: https://my.home-assistant.io/redirect/config_flow_start/?domain=thermosmart and follow the instructions.
 
-```yaml
-# Example configuration.yaml entry
-thermosmart:
-  client_id: CLIENT_ID
-  client_secret: CLIENT_SECRET
-  webhook: WEBHOOK_ID
-```
-- **client_id** (*Required*): Client ID from Thermosmart.
-- **client_secret** (*Required*): Client Secret from Thermosmart.
-- **webhook** (*Optional*): Webhook ID used to Thermosmart to send updates to (see Prerequisites). If you use webhooks, the update function (updates every 5 minutes) will be disabled.
-
-The first time you run Home Assistant with this component, go the Configure>Integrations page and add **Thermosmart**. Follow the instructions to authorize Home Assistant. A Thermosmart thermostat will appear in Home Assistant.
+## Options
+If you use a webhook, you can set the Webhook ID in the Configuration options. If you use webhooks, the update function (updates every 5 minutes) will be disabled. To remove the webhook, fill in 'None'.
 
