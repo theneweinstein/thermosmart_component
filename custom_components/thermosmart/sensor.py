@@ -7,57 +7,73 @@ https://home-assistant.io/components/thermosmart/
 
 import logging
 
-from custom_components import thermosmart
-from custom_components.thermosmart import ThermosmartEntity
+from thermosmart_hass import SENSOR_LIST
+
+from .const import DOMAIN
+from . import ThermosmartCoordinator
+
 from homeassistant.components.sensor import SensorDeviceClass, STATE_CLASS_MEASUREMENT, SensorEntity
-from .const import DEVICE, DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Thermosmart thermostat."""
-    data = hass.data[DOMAIN]
+    
+    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
+    unique_id= config_entry.unique_id
+    assert unique_id is not None
+    name = config_entry.data['name']
 
     # Check if Openterm is enabled
-    if not data[config_entry.entry_id][DEVICE].thermosmart.opentherm():
-        _LOGGER.warn("Openterm is not enabled, cannot read sensors. Please contact supplier to enabled it.")
-        return
+    if coordinator.data.get('ot'):
+        if not coordinator.data['ot']['enabled']:
+            _LOGGER.warn("Openterm is not enabled, cannot read sensors. Please contact supplier to enabled it.")
+            return
     
     sensors_to_read = ['Control setpoint', 'Modulation level', 'Water pressure', 'Hot water flow rate', \
                     'Hot water temperature', 'Return water temperature']
     sensors = []
     for sensor in sensors_to_read:
-        new_sensor = ThermosmartSensor(data[config_entry.entry_id][DEVICE], sensor, do_update = config_entry.data['do_update'])
+        new_sensor = ThermosmartSensor(coordinator, unique_id, name, sensor)
         sensors.append(new_sensor)
 
     async_add_entities(sensors)
-    thermosmart.WEBHOOK_SUBSCRIBERS.extend(sensors)
 
     return True
 
 
-class ThermosmartSensor(ThermosmartEntity, SensorEntity):
+class ThermosmartSensor(CoordinatorEntity[ThermosmartCoordinator], SensorEntity):
     """Representation of a Thermosmart sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_has_entity_name = True
 
-    def __init__(self, device, sensor, do_update = True):
+    def __init__(self, coordinator: ThermosmartCoordinator, unique_id: str, name: str, sensor: str):
         """Initialize the sensor."""
-        super().__init__(device, do_update = do_update)
-        self._attr_name = 'Boiler, ' + sensor
+        super().__init__(coordinator)
+        
         self._sensor = sensor
+        
+        self._attr_name = sensor.capitalize()        
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Thermosmart",
+            model="V3",
+            name=name
+        )
+        self._attr_unique_id = unique_id + '_' + sensor
+        self._attr_native_unit_of_measurement = SENSOR_LIST.get(sensor, '')
 
-        self._attr_native_unit_of_measurement = self._thermosmart.get_CV_sensor_list().get(sensor, '')
-
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._client_id + '_boiler')},
-            "name": "Boiler",
-            "model": "n/a",
-            "manufacturer": "Generic",
-            "via_device": (DOMAIN, self._client_id)
-        }
-        self._attr_unique_id = self._client_id + '_' + sensor
         if sensor == 'Control setpoint' or 'Hot water temperature' or 'Return water temperature':
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
         if sensor == 'Water pressure':
@@ -68,4 +84,4 @@ class ThermosmartSensor(ThermosmartEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._thermosmart.data['ot']['readable'][self._sensor] if self._thermosmart.data.get('ot') else None
+        return self.coordinator.data['ot']['readable'][self._sensor] if self.coordinator.data.get('ot') else None

@@ -1,26 +1,11 @@
 {
-  "config": {
-    "step": {
-      "pick_implementation": { 
-        "title": "Pick Authentication Method" 
-      }
-    },
-    "abort": {
-      "already_setup": "You can only configure one Thermosmart account.",
-      "authorize_url_timeout": "Timeout generating authorize url.",
-      "missing_configuration": "The Thermosmart component is not configured. Please follow the documentation."
-    },
-    "create_entry": { 
-      "default": "Successfully authenticated with Thermosmart." 
-    }
-  },
   "options": {
     "step": {
       "user": {
         "title": "Options for Thermosmart",
-        "description": "Please enter a webhook ID.",
+        "description": "Please enter a webhook (None to remove webhook).",
         "data": {
-          "webhook_id": "[%key:common::config_flow::options::webhook_id%]"
+          "webhook": "Webhook"
         }
       }
     }

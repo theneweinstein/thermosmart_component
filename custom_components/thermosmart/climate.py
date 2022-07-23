@@ -7,17 +7,20 @@ https://home-assistant.io/components/thermosmart/
 import logging
 import voluptuous as vol
 
-from custom_components import thermosmart
-from custom_components.thermosmart import ThermosmartEntity
-
-from .const import DOMAIN, DEVICE
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL, PRESET_AWAY, 
     PRESET_NONE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_IDLE)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+from . import ThermosmartCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,13 +29,20 @@ SUPPORT_FLAGS = (
     | ClimateEntityFeature.PRESET_MODE
 )
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, 
+    config_entry: ConfigEntry, 
+    async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Thermosmart thermostat."""
-    data = hass.data[DOMAIN].get(config_entry.entry_id)
+    
+    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
+    unique_id= config_entry.unique_id
+    assert unique_id is not None
+    name = config_entry.data['name']
 
-    thermostat = ThermosmartThermostat(data[DEVICE], do_update = config_entry.data['do_update'])
+    thermostat = ThermosmartThermostat(coordinator, unique_id, name)
     async_add_entities([thermostat])
-    thermosmart.WEBHOOK_SUBSCRIBERS.append(thermostat)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -57,98 +67,92 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         'clear_exceptions'
     )
 
-class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
+class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEntity):
     """Representation of a Thermosmart thermostat."""
 
     _attr_supported_features = SUPPORT_FLAGS
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_preset_modes = [PRESET_AWAY, PRESET_NONE]
+    _attr_has_entity_name = True
 
-    def __init__(self, device, do_update = True):
+    def __init__(self, coordinator: ThermosmartCoordinator, unique_id: str, name: str):
         """Initialize the thermostat."""
-        super().__init__(device, do_update = do_update)
-        self._attr_name = "Thermosmart"
+        super().__init__(coordinator)
+        
+        self._attr_name = name.capitalize()
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Thermosmart",
+            model="V3",
+            name=name,
+        )
+        self._attr_unique_id = unique_id + '_climate'
+        self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self.coordinator.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        self._exceptions = self.coordinator.data['exceptions']
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._client_id)},
-            "name": "Thermosmart",
-            "model": "V3",
-            "manufacturer": "Thermosmart",
-        }
-        self._attr_unique_id = self._client_id + '_climate'
-
-        self._attr_temperature_unit = TEMP_CELSIUS
-
-        self._attr_preset_modes = [PRESET_AWAY, PRESET_NONE]
-        self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self._thermosmart.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
-        self._exceptions = self._thermosmart.exceptions()
-
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._thermosmart.set_target_temperature(temperature)
-        self._force_update = True
-        self.async_update()
+        await self.hass.async_add_executor_job(self.coordinator.client.set_target_temperature, temperature)
+        await self.coordinator.async_request_refresh()
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
         if preset_mode == self.preset_mode:
             return
 
         if preset_mode == PRESET_AWAY:
-            self._thermosmart.pause_thermostat(True)
+            await self.hass.async_add_executor_job(self.coordinator.client.pause_thermostat, True)
 
         if preset_mode == PRESET_NONE:
-            self._thermosmart.pause_thermostat(False)  
+            await self.hass.async_add_executor_job(self.coordinator.client.pause_thermostat, False)  
 
-        self._force_update = True
-        self.async_update()
+        await self.coordinator.async_request_refresh()
 
     @property
     def current_temperature(self):
-        return self._thermosmart.room_temperature()
+        return self.coordinator.data['room_temperature']
 
     @property
     def target_temperature(self):
-        return self._thermosmart.target_temperature()
+        return self.coordinator.data['target_temperature']
 
     @property
     def preset_mode(self):
-        return PRESET_AWAY if self._thermosmart.source() == 'pause' else PRESET_NONE
+        return PRESET_AWAY if self.coordinator.data['source'] == 'pause' else PRESET_NONE
         
     @property
     def hvac_mode(self):
         """Return current operation."""
-        if self._thermosmart.source() == 'remote' or self._thermosmart.source() == 'manual':
+        if self.coordinator.data['source'] == 'remote' or self.coordinator.data['source'] == 'manual':
             return HVAC_MODE_HEAT
-        elif self._thermosmart.source() == 'schedule' or self._thermosmart.source() == 'exception':
+        elif self.coordinator.data['source'] == 'schedule' or self.coordinator.data['source'] == 'exception':
             return HVAC_MODE_AUTO
 
     @property
     def hvac_action(self):
         """Return the current running hvac operation if supported."""
-        if self._thermosmart.data.get('ot'):
+        if self.coordinator.data.get('ot'):
             # Find current HVAC action
-            if self._thermosmart.data['ot']['readable']['CH_enabled']:
+            if self.coordinator.data['ot']['readable']['CH_enabled']:
                 return CURRENT_HVAC_HEAT
-            elif self._thermosmart.data['ot']['readable']['Cooling_enabled']:
+            elif self.coordinator.data['ot']['readable']['Cooling_enabled']:
                 return CURRENT_HVAC_COOL
             else:
                 return CURRENT_HVAC_IDLE
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            self._thermosmart.pause_thermostat(False)
-            self._force_update = True
-            self.async_update()
+            await self.hass.async_add_executor_job(self.coordinator.client.pause_thermostat, False)
         elif (hvac_mode == HVAC_MODE_HEAT) or (hvac_mode == HVAC_MODE_COOL):
-            self._thermosmart.set_target_temperature(self.target_temperature)
-            self._force_update = True
-            self.async_update()
+            await self.hass.async_add_executor_job(self.coordinator.client.set_target_temperature, self.target_temperature)
+        await self.coordinator.async_request_refresh()
 
     # Define service-calls
-    def add_exception(self,start_day, start_month, start_year, start_time, end_day, end_month, end_year, end_time, program):
+    async def add_exception(self,start_day, start_month, start_year, start_time, end_day, end_month, end_year, end_time, program):
         """Add exceptions to the current list."""
         exceptions = self._exceptions
 
@@ -158,11 +162,13 @@ class ThermosmartThermostat(ThermosmartEntity, ClimateEntity):
 
         exceptions.append(new_exception)
 
-        self._thermosmart.set_exceptions(exceptions)
+        await self.hass.async_add_executor_job(self.coordinator.client.set_exceptions, exceptions)
+        await self.coordinator.async_request_refresh()
 
-    def clear_exceptions(self):
+    async def clear_exceptions(self):
         """Clear all exceptions."""
-        self._thermosmart.set_exceptions([])
+        await self.hass.async_add_executor_job(self.coordinator.client.set_exceptions, [])
+        await self.coordinator.async_request_refresh()
 
             
 

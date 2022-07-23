@@ -1,28 +1,13 @@
 {
-    "config": {
-      "step": {
-        "pick_implementation": { 
-          "title": "Kies authenticatie methode" 
-        }
-      },
-      "abort": {
-        "already_setup": "Je kunt maar 1 Thermosmart account activeren.",
-        "authorize_url_timeout": "Timeout tijdens genereren authorisatie URL.",
-        "missing_configuration": "De Thermosmart component is niet geconfigureerd. Volg aanwijzigen in de handleiding."
-      },
-      "create_entry": { 
-        "default": "Authenticatie met Thermosmart geslaagd." 
-      }
-    },
-    "options": {
-      "step": {
-        "user": {
-          "title": "Thermosmart opties",
-          "description": "Vul een webhook ID in.",
-          "data": {
-            "webhook_id": "Webhook ID"
-          }
+  "options": {
+    "step": {
+      "user": {
+        "title": "Thermosmart opties",
+        "description": "Vul een webhook in (None om webhook te verwijderen).",
+        "data": {
+          "webhook_id": "Webhook"
         }
       }
     }
+  }
 }
