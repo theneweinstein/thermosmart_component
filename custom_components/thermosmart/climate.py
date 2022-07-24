@@ -79,7 +79,7 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
         """Initialize the thermostat."""
         super().__init__(coordinator)
         
-        self._attr_name = name.capitalize()
+        self._attr_name = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Thermosmart",
