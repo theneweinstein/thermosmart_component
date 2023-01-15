@@ -58,7 +58,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if coordinator.data.get('ot'):
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    else:
+        await hass.config_entries.async_forward_entry_setups(entry, [Platform.CLIMATE])
 
     return True
 

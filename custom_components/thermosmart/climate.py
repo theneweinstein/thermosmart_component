@@ -87,7 +87,10 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
             name=name,
         )
         self._attr_unique_id = unique_id + '_climate'
-        self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self.coordinator.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        if self.coordinator.data.get('ot'):
+            self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL] if self.coordinator.data['ot']['readable']['Cooling_config'] else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        else:
+            self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]    # Default if no Opentherm info available.
         self._exceptions = self.coordinator.data['exceptions']
 
     async def async_set_temperature(self, **kwargs):
