@@ -15,6 +15,7 @@ from . import ThermosmartCoordinator
 from homeassistant.components.sensor import SensorDeviceClass, STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import UnitOfTemperature, UnitOfPressure
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -72,14 +73,16 @@ class ThermosmartSensor(CoordinatorEntity[ThermosmartCoordinator], SensorEntity)
             name=name
         )
         self._attr_unique_id = unique_id + '_' + sensor
-        self._attr_native_unit_of_measurement = SENSOR_LIST.get(sensor, '')
 
         if sensor == 'Control setpoint' or 'Hot water temperature' or 'Return water temperature':
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         if sensor == 'Water pressure':
             self._attr_device_class =  SensorDeviceClass.PRESSURE
+            self._attr_native_unit_of_measurement = UnitOfPressure.BAR
         else:
             self._attr_device_class = None
+            self._attr_native_unit_of_measurement = SENSOR_LIST.get(sensor, '')
 
     @property
     def native_value(self):
