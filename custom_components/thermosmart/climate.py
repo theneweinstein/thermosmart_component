@@ -10,14 +10,10 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
+    HVACMode,
     PRESET_AWAY,
     PRESET_NONE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_IDLE,
+    HVACAction,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -107,14 +103,14 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
         self._attr_unique_id = unique_id + "_climate"
         if self.coordinator.data.get("ot"):
             self._attr_hvac_modes = (
-                [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+                [HVACMode.AUTO, HVACMode.HEAT, HVACMode.COOL]
                 if self.coordinator.data["ot"]["readable"]["Cooling_config"]
-                else [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+                else [HVACMode.AUTO, HVACMode.HEAT]
             )
         else:
             self._attr_hvac_modes = [
-                HVAC_MODE_AUTO,
-                HVAC_MODE_HEAT,
+                HVACMode.AUTO,
+                HVACMode.HEAT,
             ]  # Default if no Opentherm info available.
         self._exceptions = self.coordinator.data["exceptions"]
 
@@ -166,12 +162,12 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
             self.coordinator.data["source"] == "remote"
             or self.coordinator.data["source"] == "manual"
         ):
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         elif (
             self.coordinator.data["source"] == "schedule"
             or self.coordinator.data["source"] == "exception"
         ):
-            return HVAC_MODE_AUTO
+            return HVACMode.AUTO
 
     @property
     def hvac_action(self):
@@ -179,19 +175,19 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
         if self.coordinator.data.get("ot"):
             # Find current HVAC action
             if self.coordinator.data["ot"]["readable"]["CH_enabled"]:
-                return CURRENT_HVAC_HEAT
+                return HVACAction.HEATING
             elif self.coordinator.data["ot"]["readable"]["Cooling_enabled"]:
-                return CURRENT_HVAC_COOL
+                return HVACAction.COOLING
             else:
-                return CURRENT_HVAC_IDLE
+                return HVACAction.IDLE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             await self.hass.async_add_executor_job(
                 self.coordinator.client.pause_thermostat, False
             )
-        elif (hvac_mode == HVAC_MODE_HEAT) or (hvac_mode == HVAC_MODE_COOL):
+        elif (hvac_mode == HVACMode.HEAT) or (hvac_mode == HVACMode.COOL):
             await self.hass.async_add_executor_job(
                 self.coordinator.client.set_target_temperature, self.target_temperature
             )
