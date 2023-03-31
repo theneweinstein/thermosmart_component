@@ -9,5 +9,27 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "control_setpoint": {
+        "name": "Control setpoint"
+      },
+      "modulation_level": {
+        "name": "Modulation level"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "hot_water_flow_rate": {
+        "name": "Hot water flow rate"
+      },
+      "hot_water_temperature": {
+        "name": "Hot water temperature"
+      },
+      "return_water_temperature": {
+        "name": "Return water temperature"
+      }
+    }
   }
 }

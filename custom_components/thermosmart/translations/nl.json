@@ -9,5 +9,27 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "control_setpoint": {
+        "name": "Instelwaarde"
+      },
+      "modulation_level": {
+        "name": "Modulatieniveau"
+      },
+      "water_pressure": {
+        "name": "Waterdruk"
+      },
+      "hot_water_flow_rate": {
+        "name": "Warm water debiet"
+      },
+      "hot_water_temperature": {
+        "name": "Warm water temperatuur"
+      },
+      "return_water_temperature": {
+        "name": "Terugvoertemperatuur"
+      }
+    }
   }
 }
