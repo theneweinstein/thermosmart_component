@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import UnitOfTemperature, UnitOfPressure
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,7 +61,7 @@ async def async_setup_entry(
         new_sensor = ThermosmartSensor(coordinator, unique_id, name, sensor)
         sensors.append(new_sensor)
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
     return True
 
@@ -107,11 +107,11 @@ class ThermosmartSensor(CoordinatorEntity[ThermosmartCoordinator], SensorEntity)
             self._attr_device_class = None
             self._attr_native_unit_of_measurement = SENSOR_LIST.get(sensor, "")
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return (
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._attr_native_value = (
             self.coordinator.data["ot"]["readable"][self._sensor]
             if self.coordinator.data.get("ot")
             else None
         )
+        self.async_write_ha_state()

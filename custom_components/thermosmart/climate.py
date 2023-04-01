@@ -17,7 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -46,7 +46,7 @@ async def async_setup_entry(
     name = config_entry.data["name"]
 
     thermostat = ThermosmartThermostat(coordinator, unique_id, name)
-    async_add_entities([thermostat])
+    async_add_entities([thermostat], update_before_add=True)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -114,6 +114,33 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
             ]  # Default if no Opentherm info available.
         self._exceptions = self.coordinator.data["exceptions"]
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._attr_current_temperature = self.coordinator.data["room_temperature"]
+        self._attr_target_temperature = self.coordinator.data["target_temperature"]
+        self._attr_preset_mode = (
+            PRESET_AWAY if self.coordinator.data["source"] == "pause" else PRESET_NONE
+        )
+        if (
+            self.coordinator.data["source"] == "remote"
+            or self.coordinator.data["source"] == "manual"
+        ):
+            self._attr_hvac_mode = HVACMode.HEAT
+        elif (
+            self.coordinator.data["source"] == "schedule"
+            or self.coordinator.data["source"] == "exception"
+        ):
+            self._attr_hvac_mode = HVACMode.AUTO
+        if self.coordinator.data.get("ot"):
+            if self.coordinator.data["ot"]["readable"]["CH_enabled"]:
+                self._attr_hvac_action = HVACAction.HEATING
+            elif self.coordinator.data["ot"]["readable"]["Cooling_enabled"]:
+                self._attr_hvac_action = HVACAction.COOLING
+            else:
+                self._attr_hvac_action = HVACAction.IDLE
+
+        self.async_write_ha_state()
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -140,46 +167,6 @@ class ThermosmartThermostat(CoordinatorEntity[ThermosmartCoordinator], ClimateEn
             )
 
         await self.coordinator.async_request_refresh()
-
-    @property
-    def current_temperature(self):
-        return self.coordinator.data["room_temperature"]
-
-    @property
-    def target_temperature(self):
-        return self.coordinator.data["target_temperature"]
-
-    @property
-    def preset_mode(self):
-        return (
-            PRESET_AWAY if self.coordinator.data["source"] == "pause" else PRESET_NONE
-        )
-
-    @property
-    def hvac_mode(self):
-        """Return current operation."""
-        if (
-            self.coordinator.data["source"] == "remote"
-            or self.coordinator.data["source"] == "manual"
-        ):
-            return HVACMode.HEAT
-        elif (
-            self.coordinator.data["source"] == "schedule"
-            or self.coordinator.data["source"] == "exception"
-        ):
-            return HVACMode.AUTO
-
-    @property
-    def hvac_action(self):
-        """Return the current running hvac operation if supported."""
-        if self.coordinator.data.get("ot"):
-            # Find current HVAC action
-            if self.coordinator.data["ot"]["readable"]["CH_enabled"]:
-                return HVACAction.HEATING
-            elif self.coordinator.data["ot"]["readable"]["Cooling_enabled"]:
-                return HVACAction.COOLING
-            else:
-                return HVACAction.IDLE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
