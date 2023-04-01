@@ -2,10 +2,16 @@
     "domain": "thermosmart",
     "name": "Thermosmart",
     "documentation": "https://github.com/theneweinstein/thermosmart_component",
-    "dependencies": ["application_credentials"],
+    "dependencies": [
+        "application_credentials"
+    ],
     "after_dependencies": [],
-    "codeowners": ["@theneweinstein"],
-    "requirements": ["thermosmart_hass==0.6.4"],
+    "codeowners": [
+        "@theneweinstein"
+    ],
+    "requirements": [
+        "thermosmart_hass==0.6.4"
+    ],
     "config_flow": true,
-    "version": "2.0.2"
+    "version": "2.1.0"
 }
