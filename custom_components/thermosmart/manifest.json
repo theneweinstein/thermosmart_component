@@ -1,17 +1,21 @@
 {
     "domain": "thermosmart",
     "name": "Thermosmart",
-    "documentation": "https://github.com/theneweinstein/thermosmart_component",
-    "dependencies": [
-        "application_credentials"
-    ],
     "after_dependencies": [],
     "codeowners": [
         "@theneweinstein"
     ],
+    "config_flow": true,
+    "dependencies": [
+        "application_credentials"
+    ],
+    "documentation": "https://github.com/theneweinstein/thermosmart_component",
+    "iot_class": [
+        "cloud_polling", 
+        "cloud_push"
+    ],
     "requirements": [
         "thermosmart_hass==0.6.4"
     ],
-    "config_flow": true,
     "version": "2.1.0"
 }
