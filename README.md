@@ -1,3 +1,6 @@
+> [!WARNING]  
+> Thermosmart went bankrupt in summer 2023. I'm not owning this device anymore and will stop supporting this component. Likely the API will also stop working (soon).
+
 # Thermosmart custom component for HomeAssistant
 The `thermosmart` component lets you control a thermostats and view sensor data (boiler information) from [Thermosmart](https://www.thermosmart.com) thermostats. 
 
